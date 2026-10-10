@@ -1,0 +1,73 @@
+name: Build my codeg
+
+# Manual-only: this fork builds on demand, never on every push, so a
+# half-finished branch can't burn runner minutes or produce a stale installer.
+on:
+  workflow_dispatch:
+    inputs:
+      bundles:
+        description: "Bundle formats to build"
+        required: false
+        default: "app,dmg"
+        type: string
+
+env:
+  RUST_BACKTRACE: short
+  HUSKY: 0
+
+jobs:
+  build-macos:
+    runs-on: macos-14 # Apple Silicon
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Type-check before the long Rust build: a resolution mistake fails in
+      # ~1 minute here instead of after a full Tauri compile.
+      - name: Type check
+        run: pnpm exec tsc --noEmit
+
+      - name: Build
+        run: pnpm tauri build --bundles ${{ inputs.bundles }}
+        env:
+          # Ad-hoc signature: enough for macOS to launch a locally built app
+          # without an Apple Developer certificate. The app is NOT notarized,
+          # so first launch needs right-click -> Open (see README note below).
+          APPLE_SIGNING_IDENTITY: "-"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeg-macos-arm64-${{ github.run_number }}
+          path: |
+            src-tauri/target/release/bundle/macos/*.app
+            src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          retention-days: 30
