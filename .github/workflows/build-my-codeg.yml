@@ -55,7 +55,10 @@ jobs:
         run: pnpm exec tsc --noEmit
 
       - name: Build
-        run: pnpm tauri build --bundles ${{ inputs.bundles }}
+        run: |
+          pnpm tauri build \
+            --bundles ${{ inputs.bundles }} \
+            --config '{"bundle":{"createUpdaterArtifacts":false}}'
         env:
           # Ad-hoc signature: enough for macOS to launch a locally built app
           # without an Apple Developer certificate. The app is NOT notarized,
