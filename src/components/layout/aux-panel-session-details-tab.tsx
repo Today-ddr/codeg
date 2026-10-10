@@ -17,6 +17,7 @@ import { resolveActiveSessionDetails } from "@/components/conversations/active-s
 import { SessionDetailsContent } from "@/components/conversations/session-details-content"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useAuxPanelContext } from "@/contexts/aux-panel-context"
+import { usePageHandoffName } from "@/lib/browser/use-page-handoff-name"
 import {
   createMessageTurnAdapter,
   type AdapterMessageText,
@@ -173,13 +174,15 @@ export function SessionDetailsTab() {
       : null
 
   const { listAllBindings } = useDelegation()
+  const pageHandoffName = usePageHandoffName()
 
   const adapterText = useMemo<AdapterMessageText>(
     () => ({
       attachedResources: sharedT("attachedResources"),
       toolCallFailed: sharedT("toolCallFailed"),
+      pageHandoffName,
     }),
-    [sharedT]
+    [sharedT, pageHandoffName]
   )
   // Per-instance adapter: caches per-turn `AdaptedMessage` so unchanged
   // historical turns survive streaming-batch re-renders with stable refs.
