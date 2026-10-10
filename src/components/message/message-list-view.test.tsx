@@ -4,7 +4,6 @@ import {
   advanceReplyFold,
   compactionOnlyPart,
   dedupeCompactionItems,
-  extractDelegationSources,
   isForkPointUnnamed,
   markThreadTail,
   mergeConsecutiveAssistantTurns,
@@ -14,6 +13,7 @@ import {
   type ResolvedMessageGroup,
   type ThreadRenderItem,
 } from "./message-list-view"
+import { extractDelegationSources } from "@/lib/delegation-sources"
 import type { AdaptedContentPart } from "@/lib/adapters/ai-elements-adapter"
 import type { MessageTurn } from "@/lib/types"
 
